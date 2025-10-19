@@ -1,5 +1,5 @@
 🌙 Daydreamer: AI Story Studio
-Daydreamer is an imaginative, childlike AI-powered story studio where anyone can collaborate with an empathetic AI to create, save, and grow unique written worlds—one idea at a time.
+Daydreamer is an imaginative, childlike AI-powered story studio where anyone can collaborate with an empathetic AI to create, save, and grow unique written worlds, one idea at a time.
 
 🚀 Features
 🌈 Multi-story management (create, continue, save stories)

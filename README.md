@@ -14,6 +14,6 @@ Daydreamer is an imaginative, childlike AI-powered story studio where anyone can
 
 🔥 Powered by a single self-contained index.html frontend
 
-💾 LocalStorage for all persistence—no database needed
+💾 LocalStorage for user data
 
 🧑‍💻 Backend: Node.js + Express + Gemini API 

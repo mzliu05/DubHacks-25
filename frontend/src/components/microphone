@@ -1,0 +1,96 @@
+<!doctype html>
+els.statusDot.classList.add('live');
+} else {
+els.statusText.textContent = 'Idle';
+els.statusDot.classList.remove('live');
+}
+}
+
+
+function setStatus(text){ els.statusText.textContent = text; }
+
+
+function formatTime(s){
+s = Math.max(0, Math.floor(s));
+const m = Math.floor(s/60).toString().padStart(2,'0');
+const ss = (s%60).toString().padStart(2,'0');
+return `${m}:${ss}`;
+}
+function formatSize(bytes){
+if (bytes < 1024) return bytes + ' B';
+const u = ['KB','MB','GB'];
+let i = -1; do { bytes/=1024; i++; } while (bytes>=1024 && i<u.length-1);
+return bytes.toFixed(1) + ' ' + u[i];
+}
+
+
+function pickMimeType(){
+// Prefer WebM Opus; Safari often supports audio/mp4
+const candidates = [
+'audio/webm;codecs=opus',
+'audio/webm',
+'audio/ogg;codecs=opus',
+'audio/ogg',
+'audio/mp4',
+];
+if (!('MediaRecorder' in window)) return 'audio/webm';
+for (const type of candidates){ if (MediaRecorder.isTypeSupported(type)) return type; }
+return '';
+}
+
+
+function fail(msg){
+console.error(msg);
+els.debug.innerText = msg;
+els.recordBtn.disabled = true;
+els.recordBtn.style.filter = 'grayscale(1)';
+els.statusText.textContent = 'Unavailable';
+}
+function warn(msg){
+console.warn(msg);
+els.debug.innerText = msg;
+}
+async function enableMicAudio(){
+try {
+if (stream) stream.getTracks().forEach(t=>t.stop());
+stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true }, video:false });
+setupMeter(stream);
+setStatus('Mic ready');
+} catch (e){ warn('Could not access mic: ' + e.message); await enableDemoAudio(); }
+}
+async function enableDemoAudio(){
+if (!audioCtx || audioCtx.state === 'closed') audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+const lfo = audioCtx.createOscillator();
+const lfoGain = audioCtx.createGain();
+osc.type = 'sawtooth';
+osc.frequency.value = 220;
+lfo.frequency.value = 2.2;
+lfoGain.gain.value = 0.35;
+lfo.connect(lfoGain).connect(gain.gain);
+osc.connect(gain);
+analyser = audioCtx.createAnalyser();
+analyser.fftSize = 2048;
+gain.connect(analyser);
+const dest = audioCtx.createMediaStreamDestination();
+gain.connect(dest);
+try { osc.start(); lfo.start(); } catch {}
+stream = dest.stream;
+if (rafId) cancelAnimationFrame(rafId);
+drawMeter();
+setStatus('Demo audio ready');
+}
+
+
+// Clean up on page unload
+window.addEventListener('beforeunload', ()=>{
+if (rafId) cancelAnimationFrame(rafId);
+if (recorder && recorder.state !== 'inactive') try { recorder.stop(); } catch {}
+if (stream) stream.getTracks().forEach(t=>t.stop());
+if (audioCtx) audioCtx.close();
+});
+})();
+</script>
+</body>
+</html>

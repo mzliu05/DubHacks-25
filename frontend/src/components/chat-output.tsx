@@ -1,4 +1,8 @@
 import type { FC } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 
 export type Role = "user" | "assistant";
 export type ChatMessage = { id: string; role: Role; text: string };
@@ -27,13 +31,32 @@ export const ChatOutput: FC<ChatOutputProps> = ({
           messages.map((m) => (
             <div
               key={m.id}
-              className={`px-3 py-2 rounded-xl max-w-[80%] break-words overflow-hidden ${
+              className={`px-3 py-2 rounded-xl max-w-[80%] break-words overflow-hidden prose prose-sm ${
                 m.role === "user"
-                  ? "self-end bg-indigo-100"
-                  : "self-start bg-slate-100"
+                  ? "self-end bg-indigo-100 text-slate-900"
+                  : "self-start bg-slate-100 text-slate-900"
               }`}
             >
-              {m.text}
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                components={{
+                  a({ children, ...props }) {
+                    return (
+                      <a
+                        {...props}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline hover:opacity-80"
+                      >
+                        {children}
+                      </a>
+                    );
+                  },
+                }}
+              >
+                {m.text}
+              </ReactMarkdown>
             </div>
           ))
         )}

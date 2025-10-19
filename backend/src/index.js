@@ -21,8 +21,7 @@ app.post("/api/chat", async (req, res) => {
       return res.status(400).json({ error: "Missing 'message' string" });
     }
 
-    // ✅ await the Gemini call
-    const { text } = await useGemini(message);
+    const { text } = await useGemini(message); // ✅ CALLING GEMINI HERE!!!!!
 
     if (!text) {
       return res.status(502).json({ error: "Empty response from Gemini" });

@@ -9,8 +9,14 @@ type ApiResponse = {
   reply?: string;
   text?: string;
   mood?: string;
-  rageMeter?: number; // 0..100
+  rageMeter?: number; // 0..100 from backend
 };
+
+// Normalize and cache API base from env
+const RAW_API_BASE = import.meta.env.VITE_API_URL || "/api";
+const API_BASE = RAW_API_BASE.endsWith("/")
+  ? RAW_API_BASE.slice(0, -1)
+  : RAW_API_BASE;
 
 export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -18,7 +24,7 @@ export function ChatPage() {
   const [error, setError] = useState<string | null>(null);
 
   async function onSend(text: string): Promise<ApiResponse> {
-    const res = await fetch("/api/chat", {
+    const res = await fetch(`${API_BASE}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text }),

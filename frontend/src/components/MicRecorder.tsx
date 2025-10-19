@@ -111,7 +111,7 @@
 
         // --- Global Variables and Constants ---
         /** @type {string} The URL for the backend analysis endpoint. */
-        const BACKEND_API_URL = '/analyze-audio'; 
+        const BACKEND_API_URL = '../../../backend/src/audio.js'; 
         
         // --- Audio Recording State ---
         /** @type {MediaRecorder | null} */

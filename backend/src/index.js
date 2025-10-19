@@ -21,13 +21,13 @@ app.post("/api/chat", async (req, res) => {
       return res.status(400).json({ error: "Missing 'message' string" });
     }
 
-    const { text } = await useGemini(message); // ✅ CALLING GEMINI HERE!!!!!
+    const { text, mood, rageMeter } = await useGemini(message); // ✅ CALLING GEMINI HERE!!!!!
 
     if (!text) {
       return res.status(502).json({ error: "Empty response from Gemini" });
     }
 
-    res.json({ reply: text });
+    res.json({ reply: text, mood: mood, rageMeter: rageMeter });
   } catch (err) {
     console.error("Gemini error:", err);
     res.status(500).json({ error: "Server error" });

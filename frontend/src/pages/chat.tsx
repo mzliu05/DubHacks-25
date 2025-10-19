@@ -1,25 +1,42 @@
+// pages/ChatPage.tsx
 import { useState } from "react";
 import { produce } from "immer";
 import { ChatMessage, ChatOutput } from "../components/chat-output";
 import { ChatBox } from "../components/chatbox";
 import { generateUID } from "../utils/generateUID";
 
+type ApiResponse = {
+  reply?: string;
+  text?: string;
+  mood?: string;
+  rageMeter?: number; // 0..100
+};
+
 export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [locked, setLocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Example API call — replace with your real endpoint if needed
-  async function onSend(text: string): Promise<string> {
+  async function onSend(text: string): Promise<ApiResponse> {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text }),
     });
-    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-    const data = (await res.json()) as { reply?: string };
-    if (!data?.reply) throw new Error("Malformed response");
-    return data.reply;
+
+    if (!res.ok) {
+      let detail = "";
+      try {
+        detail = (await res.json())?.error ?? "";
+      } catch {}
+      throw new Error(detail || `Request failed: ${res.status}`);
+    }
+
+    const data = (await res.json()) as ApiResponse;
+    if (!data.reply && !data.text) {
+      throw new Error("Malformed response (missing reply/text)");
+    }
+    return data;
   }
 
   async function handleSubmit(text: string) {
@@ -27,7 +44,7 @@ export function ChatPage() {
     setError(null);
     setLocked(true);
 
-    // add user message
+    // user message
     setMessages((m) =>
       produce(m, (d) => {
         d.push({ id: generateUID(), role: "user", text });
@@ -35,10 +52,22 @@ export function ChatPage() {
     );
 
     try {
-      const reply = await onSend(text);
+      const { reply, text: t, mood, rageMeter } = await onSend(text);
+      const display = (reply ?? t ?? "").toString();
+
+      // assistant message with rage/mood metadata
       setMessages((m) =>
         produce(m, (d) => {
-          d.push({ id: generateUID(), role: "assistant", text: reply });
+          d.push({
+            id: generateUID(),
+            role: "assistant",
+            text: display,
+            rage:
+              typeof rageMeter === "number"
+                ? Math.max(0, Math.min(100, Math.round(rageMeter)))
+                : undefined,
+            mood,
+          });
         })
       );
     } catch (err) {
@@ -53,7 +82,6 @@ export function ChatPage() {
       <div className="mx-auto max-w-5xl px-3 py-4">
         <h1 className="text-xl font-semibold mb-2">Chat</h1>
 
-        {/* Output */}
         <ChatOutput
           messages={messages}
           locked={locked}
@@ -61,7 +89,6 @@ export function ChatPage() {
           onDismissError={() => setError(null)}
         />
 
-        {/* Input */}
         <ChatBox locked={locked} onSubmit={handleSubmit} />
       </div>
     </div>

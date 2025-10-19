@@ -1,5 +1,6 @@
 from google import genai
 from google.genai import types
+from ../frontend/src/components/
 
 
 with open('path/to/small-sample.mp3',  'rb') as f:
